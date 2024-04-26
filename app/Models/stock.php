@@ -16,4 +16,9 @@ class stock extends Model
     {
         return $this->belongsTo(Kategori::class, 'id_kategori', 'id');
     }
+
+    public function stockKeluar()
+    {
+        return $this->hasMany(StockKeluar::class, 'id_stock');
+    }
 }

@@ -19,10 +19,10 @@ return new class() extends Migration {
             $table->date('tanggal_keluar')->nullable(false);
             $table->enum('status', ['Pending', 'Terkirim', 'Tidak Terkirim'])->default('Terkirim');
             $table->timestamps();
-        });
 
-        $table->foreign('id_user')->references('id')->on('users');
-        $table->foreign('id_stock')->references('id')->on('stock');
+            $table->foreign('id_user')->references('id')->on('users');
+            $table->foreign('id_stock')->references('id')->on('stock');
+        });
     }
 
     /**
