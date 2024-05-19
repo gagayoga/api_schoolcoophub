@@ -19,7 +19,7 @@ class StockSeeder extends Seeder
                 'harga_barang' => 10000,
                 'jumlah_barang' => 50,
                 'id_kategori' => 1,
-                'tanggal_upload' => now(), // Menggunakan tanggal saat ini
+                'tanggal_upload' => now(),
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -28,16 +28,16 @@ class StockSeeder extends Seeder
                 'harga_barang' => 10000,
                 'jumlah_barang' => 50,
                 'id_kategori' => 1,
-                'tanggal_upload' => now(), // Menggunakan tanggal saat ini
+                'tanggal_upload' => now(),
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
-                'nama_barang' => 'Bendera',
+                'nama_barang' => 'Badge Bendera',
                 'harga_barang' => 2500,
                 'jumlah_barang' => 50,
                 'id_kategori' => 1,
-                'tanggal_upload' => now(), // Menggunakan tanggal saat ini
+                'tanggal_upload' => now(),
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -82,21 +82,21 @@ class StockSeeder extends Seeder
             [
                 'nama_barang' => 'Coca Cola',
                 'harga_barang' => 12000,
-                'jumlah_barang' => 50,
+                'jumlah_barang' => 0,
                 'id_kategori' => 2,
                 'tanggal_upload' => now(), // Menggunakan tanggal saat ini
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
-            [
-                'nama_barang' => 'Le Minerale',
-                'harga_barang' => 2500,
-                'jumlah_barang' => 50,
-                'id_kategori' => 2,
-                'tanggal_upload' => now(), // Menggunakan tanggal saat ini
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
+            // [
+            //     'nama_barang' => 'Le Minerale',
+            //     'harga_barang' => 2500,
+            //     'jumlah_barang' => 50,
+            //     'id_kategori' => 2,
+            //     'tanggal_upload' => now(), // Menggunakan tanggal saat ini
+            //     'created_at' => now(),
+            //     'updated_at' => now(),
+            // ],
             [
                 'nama_barang' => 'NutriBoost',
                 'harga_barang' => 6500,
@@ -107,7 +107,7 @@ class StockSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'nama_barang' => 'Teh Pucuk',
+                'nama_barang' => 'Teh Pucuk Harum',
                 'harga_barang' => 4000,
                 'jumlah_barang' => 50,
                 'id_kategori' => 2,
@@ -116,9 +116,9 @@ class StockSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'nama_barang' => 'Pocari Sweet',
+                'nama_barang' => 'Pocari Sweat',
                 'harga_barang' => 6000,
-                'jumlah_barang' => 50,
+                'jumlah_barang' => 0,
                 'id_kategori' => 2,
                 'tanggal_upload' => now(), // Menggunakan tanggal saat ini
                 'created_at' => now(),
@@ -152,7 +152,7 @@ class StockSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'nama_barang' => 'Milku',
+                'nama_barang' => 'MILKU',
                 'harga_barang' => 3000,
                 'jumlah_barang' => 50,
                 'id_kategori' => 2,
@@ -161,7 +161,7 @@ class StockSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'nama_barang' => 'Floridina',
+                'nama_barang' => 'Floridina Orange Coco',
                 'harga_barang' => 3000,
                 'jumlah_barang' => 50,
                 'id_kategori' => 2,
