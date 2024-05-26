@@ -10,7 +10,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Panggil seeder StockSeeder
-        $this->call(StockSeeder::class);
         $this->call(KategoriSeeder::class);
+        $this->call(StockSeeder::class);
     }
 }
