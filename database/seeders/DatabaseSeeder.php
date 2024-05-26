@@ -7,12 +7,10 @@ use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
         // Panggil seeder StockSeeder
         $this->call(StockSeeder::class);
+        $this->call(KategoriSeeder::class);
     }
 }

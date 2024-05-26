@@ -21,8 +21,25 @@ class StockController extends Controller
 
     public function tampilStockTerbaru()
     {
-        // Mengambil data stok yang diurutkan berdasarkan tanggal terbaru (created_at)
-        $stockTerbaru = Stock::orderBy('created_at', 'desc')->take(10)->get();
+        // Mengambil ID user yang sedang login
+        $userId = Auth::id();
+
+        // Memeriksa jika ada data di stockkeluar
+        $stockKeluarExists = StockKeluar::where('id_user', $userId)->exists();
+
+        if ($stockKeluarExists) {
+            // Mengambil data stok berdasarkan penjualan terbanyak
+            $stockTerjual = StockKeluar::select('id_stock', \DB::raw('SUM(jumlah) as total_terjual'))
+                ->groupBy('id_stock')
+                ->orderBy('total_terjual', 'desc')
+                ->take(10)
+                ->get();
+
+            $stockTerbaru = Stock::whereIn('id', $stockTerjual->pluck('id_stock'))->get();
+        } else {
+            // Mengambil data stok yang diurutkan berdasarkan tanggal terbaru (created_at)
+            $stockTerbaru = Stock::orderBy('created_at', 'desc')->take(10)->get();
+        }
 
         if ($stockTerbaru->isEmpty()) {
             return response()->json(['status' => 404, 'message' => 'Stok tidak ditemukan'], 404);
@@ -31,15 +48,17 @@ class StockController extends Controller
         // Menyiapkan respons dengan data stok terbaru
         return response()->json([
             'status' => 200,
-            'message' => 'Berhasil Menampilkan Stok Terbaru',
+            'message' => 'Berhasil Menampilkan Stok',
             'data' => $stockTerbaru,
         ], 200);
     }
 
     public function tampilStockTerbaruGuest()
     {
-        // Mengambil data stok yang diurutkan berdasarkan tanggal terbaru (created_at)
-        $stockTerbaru = Stock::orderBy('created_at', 'desc')->get();
+        // Mengambil data stok yang diurutkan berdasarkan tanggal terbaru (created_at) dan berdasarkan kategori dari teratas ke bawah
+        $stockTerbaru = Stock::orderBy('id_kategori', 'desc')
+                            ->orderBy('created_at', 'desc')
+                            ->get();
 
         if ($stockTerbaru->isEmpty()) {
             return response()->json(['status' => 404, 'message' => 'Stok tidak ditemukan'], 404);
@@ -55,7 +74,6 @@ class StockController extends Controller
 
     public function tampilStockByCategory($idKategori)
     {
-        // Mengambil data stok yang diurutkan berdasarkan tanggal terbaru (created_at) dan filter berdasarkan nama kategori
         // Mengambil data stok yang diurutkan berdasarkan tanggal terbaru (created_at) dan filter berdasarkan ID kategori
         $stockByCategory = Stock::whereHas('kategori', function ($query) use ($idKategori) {
             $query->where('id', $idKategori);
@@ -78,6 +96,46 @@ class StockController extends Controller
         $stock = stockmasuk::get();
 
         return response(['Status' => 200, 'Message' => 'Berhasil Menampilkan All Stock', 'data' => $stock], 200);
+    }
+
+    public function tampilStockKosong()
+    {
+        // Mengambil data stok yang jumlah_barang-nya 0
+        $stockHabis = Stock::where('jumlah_barang', 0)->get();
+
+        if ($stockHabis->isEmpty()) {
+            return response()->json(['status' => 404, 'message' => 'Tidak ada stok yang habis'], 404);
+        }
+
+        // Menyiapkan respons dengan data stok habis
+        return response()->json([
+            'status' => 200,
+            'message' => 'Berhasil Menampilkan Stok yang Habis',
+            'data' => $stockHabis,
+        ], 200);
+    }
+
+    public function updateStock(Request $request, $id)
+    {
+        // Validasi input
+        $validator = Validator::make($request->all(), [
+            'jumlah_barang' => 'required|integer|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => 400, 'message' => $validator->errors()->first()], 400);
+        }
+
+        $stock = Stock::find($id);
+
+        if (!$stock) {
+            return response()->json(['status' => 404, 'message' => 'Stok tidak ditemukan'], 404);
+        }
+
+        $stock->jumlah_barang = $request->jumlah_barang;
+        $stock->save();
+
+        return response()->json(['status' => 200, 'message' => 'Stok berhasil diperbarui', 'data' => $stock], 200);
     }
 
     public function tampilStockKeluar()
@@ -174,5 +232,96 @@ class StockController extends Controller
             // Jika jumlah barang yang diminta melebihi jumlah barang yang tersedia, kirimkan respons error
             return response()->json(['errors' => 'Jumlah barang yang diminta melebihi stok tersedia'], 400);
         }
+    }
+
+    public function tampilDataLaporanPenjualan()
+    {
+        // Mengambil ID user yang sedang login
+        $userId = Auth::id();
+
+        // Mengambil data stock keluar berdasarkan ID user yang sedang login dan mengelompokkan berdasarkan bulan dan tahun
+        $stockKeluar = StockKeluar::where('id_user', $userId)
+            ->selectRaw('MONTH(tanggal_keluar) as bulan, YEAR(tanggal_keluar) as tahun, SUM(total_harga) as total_pendapatan, SUM(jumlah) as total_terjual')
+            ->groupBy('bulan', 'tahun')
+            ->orderBy('tahun', 'asc')
+            ->orderBy('bulan', 'asc')
+            ->get();
+
+        // Mengecek jika data stock keluar ditemukan
+        if ($stockKeluar->isEmpty()) {
+            return response()->json(['message' => 'Tidak ada data penjualan untuk user ini'], 404);
+        }
+
+        // Array untuk konversi angka bulan ke nama bulan
+        $namaBulan = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember',
+        ];
+
+        // Menambahkan produk yang paling banyak dibeli per bulan
+        $responseData = $stockKeluar->map(function ($item) use ($userId, $namaBulan) {
+            // Subquery untuk mendapatkan produk yang paling banyak dibeli dalam bulan ini
+            $topProduct = StockKeluar::where('id_user', $userId)
+                ->whereMonth('tanggal_keluar', $item->bulan)
+                ->whereYear('tanggal_keluar', $item->tahun)
+                ->select('id_stock', \DB::raw('SUM(jumlah) as total_terjual'))
+                ->groupBy('id_stock')
+                ->orderBy('total_terjual', 'desc')
+                ->first();
+
+            // Mengambil nama produk dari tabel stock berdasarkan id_stock
+            $namaProduk = $topProduct ? Stock::find($topProduct->id_stock)->nama_barang : 'Tidak Ada';
+
+            return [
+                'bulan' => $namaBulan[$item->bulan],
+                'tahun' => $item->tahun,
+                'total_pendapatan' => $item->total_pendapatan,
+                'total_terjual' => $item->total_terjual,
+                'produk_penjualan_terbanyak' => $namaProduk,
+            ];
+        });
+
+        // Mengembalikan respons JSON dengan data penjualan
+        return response()->json([
+            'status' => 200,
+            'message' => 'Berhasil Menampilkan Laporan Penjualan',
+            'data' => $responseData,
+        ], 200);
+    }
+
+    public function tampilLaporanPenjualan()
+    {
+        // Mengambil ID user yang sedang login
+        $userId = Auth::id();
+
+        // Mengambil data stock keluar berdasarkan ID user yang sedang login dan mengelompokkan berdasarkan bulan dan tahun
+        $stockKeluar = StockKeluar::where('id_user', $userId)
+            ->selectRaw('MONTH(tanggal_keluar) as bulan, YEAR(tanggal_keluar) as tahun, SUM(total_harga) as total_pendapatan, SUM(jumlah) as total_terjual')
+            ->groupBy('bulan', 'tahun')
+            ->orderBy('tahun', 'asc')
+            ->orderBy('bulan', 'asc')
+            ->get();
+
+        // Mengecek jika data stock keluar ditemukan
+        if ($stockKeluar->isEmpty()) {
+            return response()->json(['message' => 'Tidak ada data penjualan untuk user ini'], 404);
+        }
+
+        // Menghitung jumlah bulan
+        $jumlahBulan = $stockKeluar->unique('bulan')->count();
+
+        // Menghitung total pendapatan dan total barang terjual dari seluruh data penjualan
+        $totalPendapatan = $stockKeluar->sum('total_pendapatan');
+        $totalTerjual = $stockKeluar->sum('total_terjual');
+
+        // Mengembalikan respons JSON dengan data penjualan
+        return response()->json([
+            'status' => 200,
+            'message' => 'Berhasil Menampilkan Laporan Penjualan',
+            'jumlah_bulan' => (string) $jumlahBulan,
+            'total_pendapatan' => (string) $totalPendapatan,
+            'total_terjual' => (string) $totalTerjual,
+        ], 200);
     }
 }
