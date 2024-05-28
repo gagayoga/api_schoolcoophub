@@ -6,6 +6,7 @@ use App\Models\stock;
 use App\Models\stockkeluar;
 use App\Models\stockmasuk;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -35,10 +36,14 @@ class StockController extends Controller
                 ->take(10)
                 ->get();
 
-            $stockTerbaru = Stock::whereIn('id', $stockTerjual->pluck('id_stock'))->get();
+            $stockTerbaru = Stock::whereIn('id', $stockTerjual->pluck('id_stock'))
+                ->orderBy('created_at', 'desc')
+                ->get();
         } else {
             // Mengambil data stok yang diurutkan berdasarkan tanggal terbaru (created_at)
-            $stockTerbaru = Stock::orderBy('created_at', 'desc')->take(10)->get();
+            $stockTerbaru = Stock::orderBy('created_at', 'desc')
+                ->take(10)
+                ->get();
         }
 
         if ($stockTerbaru->isEmpty()) {
@@ -143,8 +148,14 @@ class StockController extends Controller
         // Mengambil ID user yang sedang login
         $userId = Auth::id();
 
-        // Mengambil data stock keluar berdasarkan ID user yang sedang login
-        $stockKeluar = StockKeluar::where('id_user', $userId)->orderBy('created_at', 'desc')->get();
+        // Menentukan batas waktu satu bulan yang lalu dari tanggal saat ini
+        $oneMonthAgo = Carbon::now()->subMonth();
+
+        // Mengambil data stock keluar berdasarkan ID user yang sedang login dan batas waktu satu bulan
+        $stockKeluar = StockKeluar::where('id_user', $userId)
+            ->where('created_at', '>=', $oneMonthAgo)
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         // Mengecek jika data stock keluar ditemukan
         if ($stockKeluar->isEmpty()) {
